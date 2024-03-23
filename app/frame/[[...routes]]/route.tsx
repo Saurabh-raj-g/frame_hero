@@ -11,6 +11,7 @@ import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
+import { CSSProperties } from 'hono/jsx'
 
 type State = {
   spins: number;
@@ -44,40 +45,7 @@ app.frame('/', async (c) => {
 
   return c.res({
     action: '/area',
-    image: (
-      <div
-        style={{
-          alignItems: 'center',
-          background:
-            'linear-gradient(to right, #432889, #17101F)',
-          backgroundSize: '100% 100%',
-          display: 'flex',
-          flexDirection: 'column',
-          flexWrap: 'nowrap',
-          height: '100%',
-          justifyContent: 'center',
-          textAlign: 'center',
-          width: '100%',
-        }}
-      >
-        <div
-          style={{
-            color: 'white',
-            fontSize: 60,
-            fontStyle: 'normal',
-            letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            marginTop: 30,
-            padding: '0 120px',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {status === 'response'
-            ? 'DESCIPTION TEXT, AGREE TO TNC'
-            : 'Welcome to the frame quest!'}
-        </div>
-      </div>
-    ),
+    image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmXANHJNRPo3Zs9UCwbKadbzdrQyS4tJb5c8wvTcXbrRJy`,
     intents: [
       <Button value="ok">Start game</Button>,
     ],
@@ -117,15 +85,61 @@ app.frame('/area', async(c) => {
   return c.res({
     action: '/avatar-gender',
     image: (
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
-        Choose ur region
-        1- Asia
-        2- Africa
-        3- Europe
-        4- NA
-        5- SA
-        6- Internet
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 60,
+          color: 'black',
+          background: '#f6f6f6',
+          width: '100%',
+          height: '100%',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'relative', // Add this line
+        }}
+      >
+        <img
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
+          alt="Background Image"
+        />
+        <div style={{
+          position: 'absolute', top: 10,
+          display: 'flex',
+          fontSize: 50,
+          backgroundColor: 'white',
+          width: '50%',
+          height: '70%',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+
+          <div style={{
+            zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center',
+            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+            backgroundClip: 'text',
+            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
+          }}>
+
+            1- Asia
+            <br />
+            2- Africa
+            <br />
+            3- Europe
+            <br />
+            4- NA
+            <br />
+            5- SA
+            <br />
+            6- Internet
+          </div>
+        </div>
+
       </div>
+
     ),
     intents: [
       <TextInput placeholder="Enter your number..." />,
@@ -136,12 +150,33 @@ app.frame('/area', async(c) => {
   })
 })
 
+export const NftImageBG = {
+  height: '100%',
+  width: '100%',
+  display: 'flex',
+  textAlign: 'center',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
+  flexWrap: 'nowrap',
+  backgroundColor: 'white',
+  backgroundImage: 'radial-gradient(circle at 25px 25px, lightgray 2%, transparent 0%), radial-gradient(circle at 75px 75px, lightgray 2%, transparent 0%)',
+  backgroundSize: '100px 100px',
+} as CSSProperties
+
 app.frame('/avatar-gender', (c) => {
   return c.res({
     action: '/attributes',
     image: (
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
-        Choose gender for ur avatar
+      <div style={NftImageBG}>
+        <div style={{
+          backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+          backgroundClip: 'text',
+          color: 'transparent',
+          fontSize: 60
+        }}>
+          Choose gender for ur avatar
+        </div>
       </div>
     ),
     intents: [
@@ -172,7 +207,8 @@ app.frame('/attributes', (c) => {
   // }
   return c.res({
     image: (
-      <div style={{ color: 'white', display: 'flex', flexDirection: "column", fontSize: 60 }}>
+      <div style={NftImageBG}>
+
         Your attributes were randomly generated
         {
           data.map((attr, index) => (
@@ -205,7 +241,7 @@ app.frame('/nft', (c) => {
   return c.res({
     // action: '/attributes',
     image: (
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+      <div style={NftImageBG}>
         NFT
       </div>
     ),
