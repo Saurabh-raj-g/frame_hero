@@ -16,17 +16,25 @@ const app = new Frog<{ State: State }>({
   basePath: '/frame',
   initialState: {
     spins: 3
-  }
-  // hub: pinata()
+  },
+  // hub: {
+  //   apiUrl: "https://hubs.airstack.xyz",
+  //   fetchOptions: {
+  //     headers: {
+  //       "x-airstack-hubs": process.env.AIRSTACK_API_KEY as string,
+  //     }
+  //   }
+  // }
+  hub: pinata()
 })
 
 // Uncomment to use Edge Runtime
 // export const runtime = 'edge'
 
 app.frame('/', async (c) => {
-  
+
   const { buttonValue, inputText, status } = c
-  
+
 
 
   return c.res({
@@ -121,7 +129,7 @@ app.frame('/attributes', (c) => {
     if (buttonValue === 'respin') previousState.spins--
   })
   const data = RandomAttributesValueService.getAttributeWithValue();
-  
+
   // middleware
   //getrandom attributes
 
@@ -133,16 +141,16 @@ app.frame('/attributes', (c) => {
   // }
   return c.res({
     image: (
-      <div style={{ color: 'white', display: 'flex', flexDirection:"column", fontSize: 60 }}>
+      <div style={{ color: 'white', display: 'flex', flexDirection: "column", fontSize: 60 }}>
         Your attributes were randomly generated
         {
           data.map((attr, index) => (
             <div key={index}>
-              {attr.name + " : " + attr.value} 
+              {attr.name + " : " + attr.value}
             </div>
           ))
         }
-      
+
         {state.spins ?
           `spins remaining : ${state.spins}`
           : 'No spins remaining'
