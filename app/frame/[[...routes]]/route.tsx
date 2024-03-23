@@ -6,6 +6,10 @@ import UserRepository from '@/src/repositories/userRepository'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
 import { ForcasterType } from '@/src/types/ForcasterType'
+import Country from '@/src/valueObject/Country'
+import Gender from '@/src/valueObject/Gender'
+import RandomAttributes from '@/src/valueObject/RandomAttributes'
+import Role from '@/src/valueObject/Role'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
@@ -15,14 +19,23 @@ import { serveStatic } from 'frog/serve-static'
 type State = {
   spins: number;
   user: UserInterface | null;
+  country: Country | null;
+  gender: Gender | null;
+  role: Role | null;
+  randomeAttributes: {name:RandomAttributes, value: number}[];
 }
+const MAX_SPINS = 3;
 
 const app = new Frog<{ State: State }>({
   assetsPath: '/',
   basePath: '/frame',
   initialState: {
-    spins: 3,
+    spins: MAX_SPINS,
     user: null,
+    country: null,
+    gender: null,
+    role: null,
+    randomeAttributes: [],
   },
   verify: 'silent',
   // hub: {
@@ -108,6 +121,12 @@ app.frame('/area', async(c) => {
         previousState.user = saved;
       })
     }
+    else{
+      state = deriveState(previousState => {
+        previousState.user = user;
+      })
+    }
+
   }
 
 
@@ -137,6 +156,13 @@ app.frame('/area', async(c) => {
 })
 
 app.frame('/avatar-gender', (c) => {
+  const {inputText, deriveState } = c;
+  const state = deriveState(previousState => {
+    const country = Country.fromId<Country>(parseInt(inputText!));
+    if(country.isUnknown()){throw new Error("invalid country")}
+    previousState.country = country;
+  })
+    
   return c.res({
     action: '/attributes',
     image: (
@@ -147,7 +173,7 @@ app.frame('/avatar-gender', (c) => {
     intents: [
       <Button value="male">Male</Button>,
       <Button value="female">Female</Button>,
-      <Button value="anonymous">Anon</Button>,
+      <Button value="annonymous">Anon</Button>,
 
 
     ],
@@ -155,12 +181,35 @@ app.frame('/avatar-gender', (c) => {
 })
 
 app.frame('/attributes', (c) => {
-  const { buttonValue, deriveState } = c
-  const state = deriveState(previousState => {
-    if (buttonValue === 'respin') previousState.spins--
-  })
-  const data = RandomAttributesValueService.getAttributeWithValue();
+  const { buttonValue, deriveState,previousState } = c
+  let randomAttributes:  {name:RandomAttributes;value:number}[] =[];
+  if(buttonValue !== 'respin' && previousState.spins === MAX_SPINS){
+    const attributes   = RandomAttributesValueService.getAttributeWithValue();
+    randomAttributes = attributes.map(attr => {
+      const obj = RandomAttributes.fromName<RandomAttributes>(attr.name);
+      if(obj.isUnknown()){throw new Error("invalid attribute")}
+      return {name: obj, value: attr.value}
+    })
+    previousState.randomeAttributes = randomAttributes;
+  }
 
+  const state = deriveState(previousState => {
+    if (buttonValue !== 'respin'){
+      const gender = Gender.fromName<Gender>(buttonValue!);
+      if(gender.isUnknown()){throw new Error("invalid gender")}
+      previousState.gender = gender;
+    }
+    if(buttonValue === 'respin' && previousState.spins > 0){
+      previousState.spins--;
+      const attributes = RandomAttributesValueService.getAttributeWithValue();
+      randomAttributes  = attributes.map(attr => {
+        const obj = RandomAttributes.fromName<RandomAttributes>(attr.name);
+        if(obj.isUnknown()){throw new Error("invalid attribute")}
+        return {name: obj, value: attr.value}
+      })
+      previousState.randomeAttributes = randomAttributes;
+    }
+  })
   // middleware
   //getrandom attributes
 
@@ -170,14 +219,15 @@ app.frame('/attributes', (c) => {
   //   // getrandom attributes
   //   spins -= 1
   // }
+ 
   return c.res({
     image: (
       <div style={{ color: 'white', display: 'flex', flexDirection: "column", fontSize: 60 }}>
         Your attributes were randomly generated
         {
-          data.map((attr, index) => (
+          randomAttributes.map((attr, index) => (
             <div key={index}>
-              {attr.name + " : " + attr.value}
+              {attr['name'].getLabel() + " : " + attr.value}
             </div>
           ))
         }
@@ -211,9 +261,6 @@ app.frame('/nft', (c) => {
     ),
     intents: [
       <Button.Mint target="...">Mint</Button.Mint>,
-
-
-
     ],
   })
 })
