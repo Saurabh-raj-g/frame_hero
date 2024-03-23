@@ -1,5 +1,8 @@
 /** @jsxImportSource frog/jsx */
 
+import User from '@/src/models/user'
+import { connectToDatabase } from '@/src/service/MongoService'
+import { createUser } from '@/src/service/users.service'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
@@ -22,8 +25,16 @@ const app = new Frog<{ State: State }>({
 // Uncomment to use Edge Runtime
 // export const runtime = 'edge'
 
-app.frame('/', (c) => {
+app.frame('/', async (c) => {
   const { buttonValue, inputText, status } = c
+  const newUser: User = {
+    name: 'John2 Doe',
+    email: 'john@example.com',
+    password: 'password123',
+  };
+
+  await createUser(newUser)
+
 
   return c.res({
     action: '/area',
