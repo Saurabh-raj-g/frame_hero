@@ -17,6 +17,7 @@ const app = new Frog<{ State: State }>({
   initialState: {
     spins: 3
   },
+  verify: 'silent',
   // hub: {
   //   apiUrl: "https://hubs.airstack.xyz",
   //   fetchOptions: {
@@ -80,6 +81,11 @@ app.frame('/', async (c) => {
 })
 
 app.frame('/area', (c) => {
+  const { frameData } = c;
+  // const { fid } = frameData;
+  console.log(frameData?.fid);
+
+
   // get user data
   // if already have nft
   // redirect to dashboard
