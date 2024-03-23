@@ -2,6 +2,7 @@
 
 import User from '@/src/models/user'
 import { connectToDatabase } from '@/src/service/MongoService'
+import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
 import { createUser } from '@/src/service/users.service'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
@@ -26,14 +27,14 @@ const app = new Frog<{ State: State }>({
 // export const runtime = 'edge'
 
 app.frame('/', async (c) => {
+  
   const { buttonValue, inputText, status } = c
   const newUser: User = {
     name: 'John2 Doe',
     email: 'john@example.com',
     password: 'password123',
   };
-
-  await createUser(newUser)
+  //await createUser(newUser)
 
 
   return c.res({
@@ -127,6 +128,8 @@ app.frame('/attributes', (c) => {
   const state = deriveState(previousState => {
     if (buttonValue === 'respin') previousState.spins--
   })
+  const data = RandomAttributesValueService.getAttributeWithValue();
+  
   // middleware
   //getrandom attributes
 
@@ -138,11 +141,16 @@ app.frame('/attributes', (c) => {
   // }
   return c.res({
     image: (
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+      <div style={{ color: 'white', display: 'flex', flexDirection:"column", fontSize: 60 }}>
         Your attributes were randomly generated
-        Luck-
-        Intelligence-
-        Power-
+        {
+          data.map((attr, index) => (
+            <div key={index}>
+              {attr.name + " : " + attr.value} 
+            </div>
+          ))
+        }
+      
         {state.spins ?
           `spins remaining : ${state.spins}`
           : 'No spins remaining'

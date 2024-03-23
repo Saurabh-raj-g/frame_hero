@@ -5,16 +5,16 @@ export default class RandomAttributesValueService {
         const min = 30;
         const max = 70;
         let average = 0;
-        let isAverageValid = average <= max && average >= min;
+        const isAverageValid =(average:number)=> average <= max && average >= min;
         const result :number[] = [];
-        while(!isAverageValid){
+        while(!isAverageValid(average)){
             const tem:number[] = [];
             Array.from({length: RandomAttributes.getResourceArray().length}).forEach((_,__)=>{ 
               tem.push(Library.randomNumberBetween(0,100));
             });
             const sum =tem.reduce((pre,curr)=> pre+curr)
             average = sum/RandomAttributes.getResourceArray().length;
-            if(isAverageValid){
+            if(isAverageValid(average)){
                tem.forEach((_,index)=>{
                      result.push(tem[index]);
                 });
