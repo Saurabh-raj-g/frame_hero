@@ -1,7 +1,7 @@
 import { ForcasterType } from "@/src/types/ForcasterType";
 import { NFTType } from "@/src/types/NFTType";
 
-export default interface User {
+export default interface UserInterface {
     forcaster: ForcasterType;
     createdAt: string;
     updatedAt: string;

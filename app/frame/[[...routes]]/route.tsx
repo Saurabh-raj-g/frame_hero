@@ -1,6 +1,11 @@
 /** @jsxImportSource frog/jsx */
 
+import UserInterface from '@/src/models/interfaces/UserInterface'
+import User from '@/src/models/user'
+import UserRepository from '@/src/repositories/userRepository'
+import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
+import { ForcasterType } from '@/src/types/ForcasterType'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
@@ -8,14 +13,16 @@ import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
 
 type State = {
-  spins: number
+  spins: number;
+  user: UserInterface | null;
 }
 
 const app = new Frog<{ State: State }>({
   assetsPath: '/',
   basePath: '/frame',
   initialState: {
-    spins: 3
+    spins: 3,
+    user: null,
   },
   verify: 'silent',
   // hub: {
@@ -33,10 +40,7 @@ const app = new Frog<{ State: State }>({
 // export const runtime = 'edge'
 
 app.frame('/', async (c) => {
-
-  const { buttonValue, inputText, status } = c
-
-
+  const {status} = c;
 
   return c.res({
     action: '/area',
@@ -80,10 +84,31 @@ app.frame('/', async (c) => {
   })
 })
 
-app.frame('/area', (c) => {
-  const { frameData } = c;
-  // const { fid } = frameData;
-  console.log(frameData?.fid);
+app.frame('/area', async(c) => {
+  let state = c.previousState;
+  const { buttonValue, inputText, status,frameData,deriveState  } = c;
+  
+  if(status === 'response' && buttonValue === 'ok'){
+    const userReposiotry = new UserRepository();
+    const user = await userReposiotry.findByFid(frameData?.fid!);
+    if(!user){
+      // create user
+      const forCasterData =  await PinataService.userByFid(frameData?.fid!);
+      const forcaster: ForcasterType = {
+        fid: forCasterData.data.fid,
+        name: forCasterData.data.display_name,
+        username: forCasterData.data.username,
+        walletAddress: forCasterData.data.custody_address,
+        pfpUrl: forCasterData.data.pfp_url,
+      }
+      const newUser = new User(forcaster, null, 0).getUser();
+      const saved = await userReposiotry.create(newUser);
+      if(!saved){throw new Error('user not saved')};
+      state = deriveState(previousState => {
+        previousState.user = saved;
+      })
+    }
+  }
 
 
   // get user data

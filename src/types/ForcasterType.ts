@@ -1,7 +1,7 @@
 export type ForcasterType = {
     fid: number;
-    walletAddress: string;
     name: string;
+    walletAddress: string;
     pfpUrl: string;
     username: string;  
 }
