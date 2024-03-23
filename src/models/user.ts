@@ -1,10 +1,12 @@
-// models/user.ts
-
+import { ForcasterType } from "../types/ForcasterType";
+import { NFTType } from "../types/NFTType";
 interface User {
-  name: string;
-  email: string;
-  password: string;
-  // Add any additional fields as needed
+  forcaster: ForcasterType;
+  createdAt: string;
+  updatedAt: string;
+  balance: number;
+  nft:NFTType;
+  //withdraws: WithdrawType[];
 }
 
 export default User;
