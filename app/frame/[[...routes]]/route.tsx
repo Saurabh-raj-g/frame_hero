@@ -1,10 +1,11 @@
 /** @jsxImportSource frog/jsx */
 
+import { abi, contractAbi, mintABI } from '@/src/abi/ERC721abi'
 import NFT from '@/src/models/nft'
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
 import AirStackService from '@/src/service/AirStackService'
-import GenerateImageData, { NftImageBG } from '@/src/service/ImageService'
+import GenerateImageData, { BigTextStyle, NftImageBG } from '@/src/service/ImageService'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
 import ThirdWebService from '@/src/service/ThirdWebService'
@@ -16,7 +17,7 @@ import Country from '@/src/valueObject/Country'
 import Gender from '@/src/valueObject/Gender'
 import RandomAttributes from '@/src/valueObject/RandomAttributes'
 import { ThirdwebSDK } from '@thirdweb-dev/sdk'
-import { Button, Frog, TextInput } from 'frog'
+import { Button, Frog, parseEther, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
 import { handle } from 'frog/next'
@@ -61,6 +62,7 @@ app.frame('/', async (c) => {
     image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmXANHJNRPo3Zs9UCwbKadbzdrQyS4tJb5c8wvTcXbrRJy`,
     intents: [
       <Button value="ok">Start game</Button>,
+      <Button action='/dashboard'>Already have NFT</Button>,
     ],
   })
 })
@@ -105,7 +107,7 @@ app.frame('/area', async (c) => {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          position: 'relative', // Add this line
+          position: 'relative',
         }}
       >
         {/* <img
@@ -125,14 +127,8 @@ app.frame('/area', async (c) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-
-          <div style={{
-            zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-            backgroundClip: 'text',
-            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
-          }}>
-            {frameData?.fid!}
+          <div style={BigTextStyle}>
+            fid - {frameData?.fid!}
             <br />
             1- Asia
             <br />
@@ -182,8 +178,7 @@ app.frame('/avatar-gender', async (c) => {
   };
   state = deriveState(previousState => {
     const country = Country.fromId<Country>(parseInt(inputText!));
-    if (country.isUnknown()) { throw new Error("invalid country") }
-    previousState.country = country.toJson();
+    previousState.country = country.isUnknown() ? Country.internet().toJson() : country.toJson();
   })
 
   return c.res({
@@ -191,11 +186,12 @@ app.frame('/avatar-gender', async (c) => {
     image: (
       <div style={NftImageBG}>
         <div style={{
-          backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-          backgroundClip: 'text',
-          color: 'transparent',
-          fontSize: 60
+          fontSize: 40,
+          alignContent: 'center',
+          ...BigTextStyle
         }}>
+          Area -- {state.country?.label}
+          <br />
           Choose gender for ur avatar
         </div>
       </div>
@@ -266,20 +262,26 @@ app.frame('/attributes', async (c) => {
   return c.res({
     image: (
       <div style={NftImageBG}>
-
-        Your attributes were randomly generated
-        {
-          randomAttributes.map((attr, index) => (
-            <div key={index}>
-              {attr.name.label + " : " + attr.value}
-            </div>
-          ))
-        }
-
-        {state.spins ?
-          `spins remaining : ${state.spins}`
-          : 'No spins remaining'
-        }
+        <div style={{
+          fontSize: 40,
+          alignContent: 'center',
+          ...BigTextStyle
+        }}>
+          Your attributes (random)
+          {
+            randomAttributes.map((attr, index) => (
+              <div key={index}>
+                {attr.name.label + " : " + attr.value}
+              </div>
+            ))
+          }
+        </div>
+        <div style={{ fontSize: 40 }}>
+          {state.spins ?
+            `spins remaining : ${state.spins}`
+            : 'No spins remaining'
+          }
+        </div>
       </div>
     ),
     intents: [
@@ -293,33 +295,33 @@ app.frame('/building-image', async (c) => {
   const { previousState } = c;
 
   try {
-    // const svg = GenerateImageData(c.previousState)
-    // const arrayBuffer = await svg.arrayBuffer();
-    // const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
-    // );
+    const svg = GenerateImageData(c.previousState)
+    const arrayBuffer = await svg.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
+    );
 
-    // const data = new FormData();
-    // data.append("file", blob);
+    const data = new FormData();
+    data.append("file", blob);
 
-    // const pinataMetadata = JSON.stringify({
-    //   name: `nft_${c.previousState.user?.forcaster.fid}`,
-    // });
-    // data.append("pinataMetadata", pinataMetadata);
-    // const upload = await fetch(
-    //   "https://api.pinata.cloud/pinning/pinFileToIPFS",
-    //   {
-    //     method: "POST",
-    //     headers: {
-    //       Authorization: `Bearer ${process.env.PINATA_API_JWT}`,
-    //     },
-    //     body: data,
-    //   }
-    // );
-    // const uploadRes = await upload.json();
-    // console.log(uploadRes);
+    const pinataMetadata = JSON.stringify({
+      name: `nft_${c.previousState.user?.forcaster.fid}`,
+    });
+    data.append("pinataMetadata", pinataMetadata);
+    const upload = await fetch(
+      "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.PINATA_API_JWT}`,
+        },
+        body: data,
+      }
+    );
+    const uploadRes = await upload.json();
+    console.log(uploadRes);
 
-    // const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
-    const imageurl = 'https://harlequin-electoral-lemur-550.mypinata.cloud/ipfs/QmfW2dYhGA68nFJ1kCuxAiPFGuk17ssR5ZtmCmmuQdZGNe'
+    const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
+    // const imageurl = 'https://harlequin-electoral-lemur-550.mypinata.cloud/ipfs/QmfW2dYhGA68nFJ1kCuxAiPFGuk17ssR5ZtmCmmuQdZGNe'
     console.log(imageurl)
     previousState.imageurl = imageurl;
 
@@ -351,47 +353,93 @@ app.frame('/nft', async (c) => {
     })
     attributes.push({ name: c.previousState.country?.name!, value: 0 });
     attributes.push({ name: c.previousState.gender?.name!, value: 0 });
-    const newNFT = new NFT(0, "Frame Hero", previousState.imageurl!, "This is a cool NFT", attributes).getNFT();
-    console.log("signedPayloadsvsv");
-    const thirdweb = new ThirdWebService(Chain.baseSepolia());
-    console.log("signedPayloadsvchhjasv");
-    const signedPayload = await thirdweb.getSignatureForMinting(newNFT, c.previousState.user?.forcaster.walletAddress!);
-    console.log("signedPayload", signedPayload);
-    const sdk = new ThirdwebSDK("base-sepolia-testnet", {
-      clientId: process.env.THIRDWEB_CLIENT_KEY!,
-    });
-    const contract = await sdk.getContract(process.env.NFT_COLLECTION_ADDRESS!, "nft-collection");
-    const minted = await contract.signature.mint(signedPayload)
-    console.log(minted.id._hex);
+    // const newNFT = new NFT(0, "Frame Hero", previousState.imageurl!, "This is a cool NFT", attributes).getNFT();
+    // console.log("signedPayloadsvsv");
+    // const thirdweb = new ThirdWebService(Chain.baseSepolia());
+    // console.log("signedPayloadsvchhjasv");
+    // const signedPayload = await thirdweb.getSignatureForMinting(newNFT, c.previousState.user?.forcaster.walletAddress!);
+    // console.log("signedPayload", signedPayload);
+    // const sdk = new ThirdwebSDK("base-sepolia-testnet", {
+    //   clientId: process.env.THIRDWEB_CLIENT_KEY!,
+    // });
+    // const contract = await sdk.getContract(process.env.NFT_COLLECTION_ADDRESS!, "nft-collection");
+    // const minted = await contract.signature.mint(signedPayload)
+    // console.log(minted.id._hex);
   } catch (error) {
     console.log(error);
   }
 
-
   return c.res({
-    // image: (
-    //     svg.
-    // ),
+    action: '/dashboard',
     image: previousState.imageurl!,
     intents: [
-      <Button.Mint target="...">Mint</Button.Mint>,
+      <Button.Transaction target="/mint">Mint</Button.Transaction>,
     ],
   })
 })
 
+app.transaction('/mint', (c) => {
+  const { inputText } = c
+  // Contract transaction response.
+  return c.contract({
+    abi,
+    chainId: 'eip155:10',
+    functionName: 'mint',
+    args: [BigInt("1")],
+    to: '0xd2135CfB216b74109775236E36d4b433F1DF507B',
+    value: parseEther("0x")
+  })
+})
+
 app.frame('/dashboard', (c) => {
+  const { transactionId } = c
+
   return c.res({
-    // action: '/attributes',
     image: (
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
-        Dashboard
+      <div style={NftImageBG}>
+        <div style={BigTextStyle}>
+          Dashboard
+          Transaction ID: {transactionId}
+
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action='/leaderboard'>Leaderboard</Button>,
+      <Button action='/daily-quest'>Daily Quest</Button>,
+    ],
+  })
+})
+
+
+app.frame('/leaderboard', (c) => {
+  return c.res({
+    image: (
+      <div style={NftImageBG}>
+        <div style={BigTextStyle}>
+          Leaderboard
+        </div>
       </div>
     ),
     intents: [
       <Button value="1">1</Button>,
-      <Button value="2">2</Button>,
+      <Button action='/dashboard'>back</Button>,
+    ],
+  })
+})
 
-
+app.frame('/daily-quest', (c) => {
+  return c.res({
+    image: (
+      <div style={NftImageBG}>
+        <div style={BigTextStyle}>
+          Daily quest
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button value="1">1</Button>,
+      <Button action='/dashboard'>back</Button>,
     ],
   })
 })

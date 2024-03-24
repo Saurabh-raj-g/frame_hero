@@ -1,3 +1,40 @@
+export const mintABI = [
+    {
+        "inputs": [
+            {
+                "internalType": "struct ITokenERC721.MintRequest",
+                "name": "_req",
+                "type": "tuple"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_signature",
+                "type": "bytes"
+            }
+        ],
+        "name": "mintWithSignature",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenIdMinted",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+] as const
+
+export const abi = [
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'mint',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+] as const
+
 export const contractAbi = [
     {
         "inputs": [],
