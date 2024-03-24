@@ -16,8 +16,9 @@ export default class ThirdWebService {
                 }
             );
         }
-        throw new Error(`Invalid chain: switch to ${Chain.baseSepolia().getLabel()}`)
-       
+        else{
+            throw new Error(`Invalid chain: switch to ${Chain.baseSepolia().getLabel()}`)
+        }
     }
     
 
