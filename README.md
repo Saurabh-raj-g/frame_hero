@@ -1,6 +1,5 @@
-```
-npm install
-npm run dev
-```
+FRAME-HERO
 
-Head to http://localhost:3000/api
+frame preview https://warpcast.com/drbear/0x64536efb
+
+DOCS: https://framehero.gitbook.io/frameheroes-documentation/
