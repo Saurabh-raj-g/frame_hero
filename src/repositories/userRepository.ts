@@ -50,7 +50,7 @@ export  default class UserRepository {
             if (!this.collection) {
                 throw new Error('Collection not set');
             }
-            const data = await this.collection.findOne({forcaster: {fid:fId}});
+            const data = await this.collection.findOne({'forcaster.fid': fId});
             return data;
         } catch (error) {
             throw new Error(`Error getting user: , ${error}`);

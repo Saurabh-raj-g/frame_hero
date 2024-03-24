@@ -3,6 +3,7 @@
 import NFT from '@/src/models/nft'
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
+import AirStackService from '@/src/service/AirStackService'
 import GenerateImageData, { NftImageBG } from '@/src/service/ImageService'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
@@ -23,6 +24,7 @@ import { serveStatic } from 'frog/serve-static'
 
 const MAX_SPINS = 3;
 
+
 const app = new Frog<{ State: State }>({
   assetsPath: '/',
   basePath: '/frame',
@@ -33,6 +35,7 @@ const app = new Frog<{ State: State }>({
     gender: null,
     role: null,
     randomeAttributes: [],
+    isUserTempLoaded: false,
   },
   verify: 'silent',
   // hub: {
@@ -68,28 +71,20 @@ app.frame('/area', async (c) => {
   if (status === 'response' && buttonValue === 'ok') {
     const userReposiotry = new UserRepository();
     const user = await userReposiotry.findByFid(frameData?.fid!);
-    if (!user) {
-      // create user
-      const forCasterData = await PinataService.userByFid(frameData?.fid!);
-      const forcaster: ForcasterType = {
-        fid: forCasterData.data.fid,
-        name: forCasterData.data.display_name,
-        username: forCasterData.data.username,
-        walletAddress: forCasterData.data.custody_address,
-        pfpUrl: forCasterData.data.pfp_url,
-      }
-      const newUser = new User(forcaster, null, 0).getUser();
-      const saved = await userReposiotry.create(newUser);
-      if (!saved) { throw new Error('user not saved') };
-      state = deriveState(previousState => {
-        previousState.user = saved;
-      })
-    }
-    else {
+    if(user){
       state = deriveState(previousState => {
         previousState.user = user;
       })
     }
+    
+      // const forcaster: ForcasterType = {
+      //   fid: frameData?.fid!,
+      //   name: forCasterData?.profileName!,
+      //   username: forCasterData?.profileName!,
+      //   walletAddress: forCasterData?.userAssociatedAddresses![0]!,
+      //   pfpUrl: forCasterData?.profileImage?.medium!,
+      // }
+     
   }
 
   // get user data
@@ -112,11 +107,11 @@ app.frame('/area', async (c) => {
           position: 'relative', // Add this line
         }}
       >
-        <img
+        {/* <img
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
           alt="Background Image"
-        />
+        /> */}
         <div style={{
           position: 'absolute', top: 10,
           display: 'flex',
@@ -162,9 +157,28 @@ app.frame('/area', async (c) => {
 })
 
 
-app.frame('/avatar-gender', (c) => {
-  const { inputText, deriveState } = c;
-  const state = deriveState(previousState => {
+app.frame('/avatar-gender', async(c) => {
+  let state = c.previousState;
+  const { inputText, deriveState, previousState,frameData } = c;
+  if (!previousState.user) {
+    // create user
+    const forCasterData = await PinataService.userByFid(frameData?.fid!);
+    
+    const forcaster: ForcasterType = {
+      fid: forCasterData.data.fid,
+      name: forCasterData.data.display_name,
+      username: forCasterData.data.username,
+      walletAddress: forCasterData.data.custody_address,
+      pfpUrl: forCasterData.data.pfp_url,
+    }
+    const newUser = new User(forcaster, null, 0).getUser();
+    state = deriveState(previousState => {
+      previousState.user = newUser;
+      previousState.isUserTempLoaded = true;
+    });
+
+  };
+  state = deriveState(previousState => {
     const country = Country.fromId<Country>(parseInt(inputText!));
     if (country.isUnknown()) { throw new Error("invalid country") }
     previousState.country = country.toJson();
@@ -192,9 +206,21 @@ app.frame('/avatar-gender', (c) => {
   })
 })
 
-app.frame('/attributes', (c) => {
+app.frame('/attributes', async(c) => {
+  let state = c.previousState;
   const { buttonValue, deriveState, previousState } = c
+
   let randomAttributes: { name: ValueObjectType; value: number }[] = [];
+  const userReposiotry = new UserRepository();
+  if(previousState.isUserTempLoaded){
+    const saved = await userReposiotry.create(previousState.user!);
+    if (!saved) { throw new Error('user not saved') };
+    state = deriveState(previousState => {
+      previousState.user = saved;
+      previousState.isUserTempLoaded = false;
+    });
+  }
+
   if (buttonValue !== 'respin' && previousState.spins === MAX_SPINS) {
     const attributes = RandomAttributesValueService.getAttributeWithValue();
     randomAttributes = attributes.map(attr => {
@@ -202,10 +228,12 @@ app.frame('/attributes', (c) => {
       if (obj.isUnknown()) { throw new Error("invalid attribute") }
       return { name: obj.toJson(), value: attr.value }
     })
-    previousState.randomeAttributes = randomAttributes;
+    state = deriveState(previousState => {
+      previousState.randomeAttributes = randomAttributes;
+    });
   }
 
-  const state = deriveState(previousState => {
+  state = deriveState(previousState => {
     if (buttonValue !== 'respin') {
       const gender = Gender.fromName<Gender>(buttonValue!);
       if (gender.isUnknown()) { throw new Error("invalid gender") }
@@ -222,6 +250,7 @@ app.frame('/attributes', (c) => {
       previousState.randomeAttributes = randomAttributes;
     }
   })
+
   // middleware
   //getrandom attributes
 
