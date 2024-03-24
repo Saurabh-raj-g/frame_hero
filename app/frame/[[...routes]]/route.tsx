@@ -1,30 +1,22 @@
 /** @jsxImportSource frog/jsx */
 
-import UserInterface from '@/src/models/interfaces/UserInterface'
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
+import GenerateImageData, { NftImageBG } from '@/src/service/ImageService'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
 import { ForcasterType } from '@/src/types/ForcasterType'
+import { State } from '@/src/types/StateType'
+import { ValueObjectType } from '@/src/types/ValueObjectType'
 import Country from '@/src/valueObject/Country'
 import Gender from '@/src/valueObject/Gender'
 import RandomAttributes from '@/src/valueObject/RandomAttributes'
-import Role from '@/src/valueObject/Role'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { CSSProperties } from 'hono/jsx'
 
-type State = {
-  spins: number;
-  user: UserInterface | null;
-  country: Country | null;
-  gender: Gender | null;
-  role: Role | null;
-  randomeAttributes: {name:RandomAttributes, value: number}[];
-}
 const MAX_SPINS = 3;
 
 const app = new Frog<{ State: State }>({
@@ -54,7 +46,7 @@ const app = new Frog<{ State: State }>({
 // export const runtime = 'edge'
 
 app.frame('/', async (c) => {
-  const {status} = c;
+  const { status } = c;
 
   return c.res({
     action: '/area',
@@ -65,16 +57,16 @@ app.frame('/', async (c) => {
   })
 })
 
-app.frame('/area', async(c) => {
+app.frame('/area', async (c) => {
   let state = c.previousState;
-  const { buttonValue, inputText, status,frameData,deriveState  } = c;
-  
-  if(status === 'response' && buttonValue === 'ok'){
+  const { buttonValue, inputText, status, frameData, deriveState } = c;
+
+  if (status === 'response' && buttonValue === 'ok') {
     const userReposiotry = new UserRepository();
     const user = await userReposiotry.findByFid(frameData?.fid!);
-    if(!user){
+    if (!user) {
       // create user
-      const forCasterData =  await PinataService.userByFid(frameData?.fid!);
+      const forCasterData = await PinataService.userByFid(frameData?.fid!);
       const forcaster: ForcasterType = {
         fid: forCasterData.data.fid,
         name: forCasterData.data.display_name,
@@ -84,19 +76,17 @@ app.frame('/area', async(c) => {
       }
       const newUser = new User(forcaster, null, 0).getUser();
       const saved = await userReposiotry.create(newUser);
-      if(!saved){throw new Error('user not saved')};
+      if (!saved) { throw new Error('user not saved') };
       state = deriveState(previousState => {
         previousState.user = saved;
       })
     }
-    else{
+    else {
       state = deriveState(previousState => {
         previousState.user = user;
       })
     }
-
   }
-
 
   // get user data
   // if already have nft
@@ -162,35 +152,20 @@ app.frame('/area', async(c) => {
     ),
     intents: [
       <TextInput placeholder="Enter your number..." />,
-
       <Button> Next</Button >,
-
     ],
   })
 })
 
-export const NftImageBG = {
-  height: '100%',
-  width: '100%',
-  display: 'flex',
-  textAlign: 'center',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexDirection: 'column',
-  flexWrap: 'nowrap',
-  backgroundColor: 'white',
-  backgroundImage: 'radial-gradient(circle at 25px 25px, lightgray 2%, transparent 0%), radial-gradient(circle at 75px 75px, lightgray 2%, transparent 0%)',
-  backgroundSize: '100px 100px',
-} as CSSProperties
 
 app.frame('/avatar-gender', (c) => {
-  const {inputText, deriveState } = c;
+  const { inputText, deriveState } = c;
   const state = deriveState(previousState => {
     const country = Country.fromId<Country>(parseInt(inputText!));
-    if(country.isUnknown()){throw new Error("invalid country")}
-    previousState.country = country;
+    if (country.isUnknown()) { throw new Error("invalid country") }
+    previousState.country = country.toJson();
   })
-    
+
   return c.res({
     action: '/attributes',
     image: (
@@ -209,38 +184,36 @@ app.frame('/avatar-gender', (c) => {
       <Button value="male">Male</Button>,
       <Button value="female">Female</Button>,
       <Button value="annonymous">Anon</Button>,
-
-
     ],
   })
 })
 
 app.frame('/attributes', (c) => {
-  const { buttonValue, deriveState,previousState } = c
-  let randomAttributes:  {name:RandomAttributes;value:number}[] =[];
-  if(buttonValue !== 'respin' && previousState.spins === MAX_SPINS){
-    const attributes   = RandomAttributesValueService.getAttributeWithValue();
+  const { buttonValue, deriveState, previousState } = c
+  let randomAttributes: { name: ValueObjectType; value: number }[] = [];
+  if (buttonValue !== 'respin' && previousState.spins === MAX_SPINS) {
+    const attributes = RandomAttributesValueService.getAttributeWithValue();
     randomAttributes = attributes.map(attr => {
       const obj = RandomAttributes.fromName<RandomAttributes>(attr.name);
-      if(obj.isUnknown()){throw new Error("invalid attribute")}
-      return {name: obj, value: attr.value}
+      if (obj.isUnknown()) { throw new Error("invalid attribute") }
+      return { name: obj.toJson(), value: attr.value }
     })
     previousState.randomeAttributes = randomAttributes;
   }
 
   const state = deriveState(previousState => {
-    if (buttonValue !== 'respin'){
+    if (buttonValue !== 'respin') {
       const gender = Gender.fromName<Gender>(buttonValue!);
-      if(gender.isUnknown()){throw new Error("invalid gender")}
-      previousState.gender = gender;
+      if (gender.isUnknown()) { throw new Error("invalid gender") }
+      previousState.gender = gender.toJson();
     }
-    if(buttonValue === 'respin' && previousState.spins > 0){
+    if (buttonValue === 'respin' && previousState.spins > 0) {
       previousState.spins--;
       const attributes = RandomAttributesValueService.getAttributeWithValue();
-      randomAttributes  = attributes.map(attr => {
+      randomAttributes = attributes.map(attr => {
         const obj = RandomAttributes.fromName<RandomAttributes>(attr.name);
-        if(obj.isUnknown()){throw new Error("invalid attribute")}
-        return {name: obj, value: attr.value}
+        if (obj.isUnknown()) { throw new Error("invalid attribute") }
+        return { name: obj.toJson(), value: attr.value }
       })
       previousState.randomeAttributes = randomAttributes;
     }
@@ -254,7 +227,7 @@ app.frame('/attributes', (c) => {
   //   // getrandom attributes
   //   spins -= 1
   // }
- 
+
   return c.res({
     image: (
       <div style={NftImageBG}>
@@ -263,7 +236,7 @@ app.frame('/attributes', (c) => {
         {
           randomAttributes.map((attr, index) => (
             <div key={index}>
-              {attr['name'].getLabel() + " : " + attr.value}
+              {attr.name.label + " : " + attr.value}
             </div>
           ))
         }
@@ -276,23 +249,123 @@ app.frame('/attributes', (c) => {
     ),
     intents: [
       <Button value="nft" action='/nft'>Preview NFT</Button>,
-
-
       <Button value="respin" action={state.spins ? '/attributes' : '/nft'}>{state.spins ? 'Retry' : 'No more changes!!'}</Button>
-
-      // <Button value="anonymous">Anon</Button>,
-
-
     ],
   })
 })
 
-app.frame('/nft', (c) => {
+app.frame('/nft', async (c) => {
+  try {
+    const svg = GenerateImageData(c.previousState)
+    const arrayBuffer = await svg.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
+    );
+
+    const data = new FormData();
+    data.append("file", blob);
+
+    const pinataMetadata = JSON.stringify({
+      name: `nft_${c.previousState.user?.forcaster.fid}`,
+    });
+    data.append("pinataMetadata", pinataMetadata);
+    const upload = await fetch(
+      "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.PINATA_API_JWT}`,
+        },
+        body: data,
+      }
+    );
+    const uploadRes = await upload.json();
+    console.log(uploadRes);
+
+    const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
+    console.log(imageurl)
+
+  } catch (error) {
+    console.log(error);
+  }
+
+
   return c.res({
-    // action: '/attributes',
+    // image: (
+    //     svg.
+    // ),
     image: (
       <div style={NftImageBG}>
-        NFT
+        {/* farcaster pfp */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0,
+          display: 'flex',
+          width: '30%',
+          height: '100%',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <img
+            width="256"
+            height="256"
+            src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
+            style={{
+              borderRadius: 128,
+            }}
+          />
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center', alignItems: 'center', textAlign: 'center',
+            fontSize: 40,
+            marginTop: 20,
+            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+            backgroundClip: 'text',
+            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
+          }}>
+            {c.previousState.user?.forcaster.username}
+            <br />
+            {c.previousState.gender?.label}
+            <br />
+            {c.previousState.country?.label}
+
+          </div>
+
+        </div>
+
+        <div style={{
+          display: 'flex',
+          width: '30%',
+          height: '100%',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center', alignItems: 'center', textAlign: 'center',
+            fontSize: 70,
+            marginTop: 20,
+            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+            backgroundClip: 'text',
+            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+          }}>
+            {
+              c.previousState.randomeAttributes.map((attr, index) => (
+                <div key={index}>
+                  {attr.name.label + " : " + attr.value}
+                </div>
+              ))
+            }
+
+            <br />
+            @roles -
+          </div>
+
+        </div>
+
+
       </div>
     ),
     intents: [

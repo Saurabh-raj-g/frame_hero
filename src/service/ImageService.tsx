@@ -1,8 +1,28 @@
-import { NftImageBG } from '@/src/service/ImageService';
+import { CSSProperties } from 'hono/jsx';
 import { ImageResponse } from 'next/og';
+import { State } from '../types/StateType';
 
-export async function GET(request: Request) {
+export const config = {
+  runtime: 'edge',
+};
+
+export const NftImageBG = {
+  height: '100%',
+  width: '100%',
+  display: 'flex',
+  textAlign: 'center',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
+  flexWrap: 'nowrap',
+  backgroundColor: 'white',
+  backgroundImage: 'radial-gradient(circle at 25px 25px, lightgray 2%, transparent 0%), radial-gradient(circle at 75px 75px, lightgray 2%, transparent 0%)',
+  backgroundSize: '100px 100px',
+} as CSSProperties
+
+function GenerateImageData(state: State) {
   return new ImageResponse(
+    // return 
     (
       <div style={NftImageBG}>
         {/* farcaster pfp */}
@@ -18,7 +38,7 @@ export async function GET(request: Request) {
           <img
             width="256"
             height="256"
-            src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
+            src={state.user?.forcaster.pfpUrl}
             style={{
               borderRadius: 128,
             }}
@@ -33,11 +53,11 @@ export async function GET(request: Request) {
             backgroundClip: 'text',
             color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
           }}>
-            @username
+            {state.user?.forcaster.username}
             <br />
-            @gender
+            {state.gender?.label}
             <br />
-            @region
+            {state.country?.label}
           </div>
 
         </div>
@@ -60,11 +80,13 @@ export async function GET(request: Request) {
             backgroundClip: 'text',
             color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
           }}>
-            @luck -
-            <br />
-            @intelligence -
-            <br />
-            @power -
+            {
+              state.randomeAttributes.map((attr, index) => (
+                <div key={index}>
+                  {attr.name.label + " : " + attr.value}
+                </div>
+              ))
+            }
             <br />
             @roles -
           </div>
@@ -80,3 +102,5 @@ export async function GET(request: Request) {
     },
   );
 }
+
+export default GenerateImageData;
