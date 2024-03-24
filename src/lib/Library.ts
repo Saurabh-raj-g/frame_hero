@@ -16,7 +16,7 @@ export default class Library {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
-  public static async mysteryBoxOpen(nft: NFTType, user:WithId<UserInterface>): Promise<number> {
+  public static async mysteryBoxOpen(nft: NFTType, user:WithId<UserInterface>): Promise<{prize:number, nft:NFTType}> {
     const attributes = Object.keys(nft.attributes);
     let prize = 0;
     const LUCK_PROBABILITY = [0,30,50,80,100];
@@ -73,7 +73,35 @@ export default class Library {
     newNftRoles.forEach((value, key) => {
       prize += value;
     });
+    
+    // update original nft with new values
 
-    return prize;
+    // get random attributes values
+    attributes.forEach((name, _) => {
+      if(nft.attributes[name].isRandomAttribute){
+          const randomAttributes = RandomAttributes.fromName<RandomAttributes>(name);
+          if(randomAttributes.isLuck()){
+            nft.attributes[name].value = randomAttributeVaules[0] ;
+          }else if(randomAttributes.isIntelligence()){
+            nft.attributes[name].value = randomAttributeVaules[1];
+          }else if(randomAttributes.isPower()){
+            nft.attributes[name].value = randomAttributeVaules[2] ;
+          }
+      }else if(nft.attributes[name].isRole){
+        delete nft.attributes[name];
+      }
+    });
+
+    newNftRoles.forEach((value, key) => {
+      nft.attributes[key] = {
+        isRandomAttribute: false,
+        isRole: true,
+        isGender: false,
+        isCountry: false,
+        value: value,
+      }
+    });
+
+    return {prize, nft};
   }
 }
