@@ -386,7 +386,7 @@ app.transaction('/mint', (c) => {
     chainId: 'eip155:84532',
     functionName: 'mint',
     args: [BigInt("1")],
-    to: '0xd2135CfB216b74109775236E36d4b433F1DF507B',
+    to: process.env.NFT_COLLECTION_ADDRESS as '0x',
     value: parseEther("0x")
   })
 })
