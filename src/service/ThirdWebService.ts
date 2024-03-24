@@ -177,7 +177,7 @@ export default class ThirdWebService {
       
         const signedPayload = await contract.erc721.signature.generate(payload);
 
-        return signedPayload.payload;
+        return signedPayload;
     }
 
     public async burnNFT(tokenId:any) {

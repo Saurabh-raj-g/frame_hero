@@ -1,16 +1,20 @@
 /** @jsxImportSource frog/jsx */
 
+import NFT from '@/src/models/nft'
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
 import GenerateImageData, { NftImageBG } from '@/src/service/ImageService'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
+import ThirdWebService from '@/src/service/ThirdWebService'
 import { ForcasterType } from '@/src/types/ForcasterType'
 import { State } from '@/src/types/StateType'
 import { ValueObjectType } from '@/src/types/ValueObjectType'
+import Chain from '@/src/valueObject/Chain'
 import Country from '@/src/valueObject/Country'
 import Gender from '@/src/valueObject/Gender'
 import RandomAttributes from '@/src/valueObject/RandomAttributes'
+import { ThirdwebSDK } from '@thirdweb-dev/sdk'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
@@ -256,6 +260,7 @@ app.frame('/attributes', (c) => {
 
 app.frame('/nft', async (c) => {
   try {
+    const {previousState} = c;
     const svg = GenerateImageData(c.previousState)
     const arrayBuffer = await svg.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
@@ -283,7 +288,25 @@ app.frame('/nft', async (c) => {
 
     const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
     console.log(imageurl)
-
+    let attributes: {name:string; value:number}[] = [];
+    c.previousState.randomeAttributes.forEach((attr) => {
+      attributes.push({name:attr.name.name,value:attr.value})
+    })
+    attributes.push({name: c.previousState.country?.name!, value: 0});
+    attributes.push({name: c.previousState.gender?.name!, value: 0});
+    
+    const newNFT =  new NFT(0, "Frame Hero", imageurl, "This is a cool NFT",attributes).getNFT();
+    console.log("signedPayloadsvsv");
+    const thirdweb = new ThirdWebService(Chain.baseSepolia());
+    console.log("signedPayloadsvchhjasv");
+    const signedPayload = await thirdweb.getSignatureForMinting(newNFT, c.previousState.user?.forcaster.walletAddress!);
+    console.log("signedPayload", signedPayload);
+    const sdk =  new ThirdwebSDK("base-sepolia-testnet", {
+      clientId: process.env.THIRDWEB_CLIENT_KEY!,
+    });
+    const contract = await sdk.getContract(process.env.NFT_COLLECTION_ADDRESS!,"nft-collection");
+    const minted = await contract.signature.mint(signedPayload)
+    console.log(minted.id._hex);
   } catch (error) {
     console.log(error);
   }

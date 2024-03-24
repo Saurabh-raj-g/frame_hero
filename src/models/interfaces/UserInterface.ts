@@ -7,4 +7,4 @@ export default interface UserInterface {
     updatedAt: string;
     balance: number;
     nft: NFTType | null;
-  }
+}
