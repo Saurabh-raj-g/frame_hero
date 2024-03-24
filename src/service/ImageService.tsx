@@ -20,6 +20,17 @@ export const NftImageBG = {
   backgroundSize: '100px 100px',
 } as CSSProperties
 
+export const BigTextStyle = {
+  display: "flex",
+  flexDirection: 'column',
+  justifyContent: 'center',
+  backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+  backgroundClip: 'text',
+  color: 'transparent',
+  fontSize: 60
+} as CSSProperties
+
+
 function GenerateImageData(state: State) {
   return new ImageResponse(
     // return 

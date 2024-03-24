@@ -2,7 +2,7 @@
 
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
-import GenerateImageData, { NftImageBG } from '@/src/service/ImageService'
+import GenerateImageData, { BigTextStyle, NftImageBG } from '@/src/service/ImageService'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
 import { ForcasterType } from '@/src/types/ForcasterType'
@@ -49,7 +49,7 @@ app.frame('/', async (c) => {
   const { status } = c;
 
   return c.res({
-    action: '/area',
+    action: '/start-game',
     image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmXANHJNRPo3Zs9UCwbKadbzdrQyS4tJb5c8wvTcXbrRJy`,
     intents: [
       <Button value="ok">Start game</Button>,
@@ -57,7 +57,7 @@ app.frame('/', async (c) => {
   })
 })
 
-app.frame('/area', async (c) => {
+app.frame('/start-game', async (c) => {
   let state = c.previousState;
   const { buttonValue, inputText, status, frameData, deriveState } = c;
 
@@ -92,7 +92,61 @@ app.frame('/area', async (c) => {
   // if already have nft
   // redirect to dashboard
   return c.res({
-    action: '/avatar-gender',
+    action: !c.previousState.user?.nft?.id ? '/region' : '/dashboard',
+    // action: '/dashboard',
+    image: (
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 60,
+          color: 'black',
+          background: '#f6f6f6',
+          width: '100%',
+          height: '100%',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'relative', // Add this line
+        }}
+      >
+        {/* <img
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
+          alt="Background Image"
+        /> */}
+        <div style={{
+          position: 'absolute', top: 10,
+          display: 'flex',
+          fontSize: 50,
+          backgroundColor: 'white',
+          width: '50%',
+          height: '70%',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+
+          <div style={BigTextStyle}>
+            Fetching user data
+            Checking for NFT ....
+          </div>
+        </div>
+      </div>
+
+    ),
+    intents: [
+      <Button> Next</Button >,
+    ],
+  })
+})
+
+app.frame('/region', async (c) => {
+  let state = c.previousState;
+
+
+  return c.res({
+    action: '/sex',
     image: (
       <div
         style={{
@@ -126,12 +180,7 @@ app.frame('/area', async (c) => {
           alignItems: 'center',
         }}>
 
-          <div style={{
-            zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-            backgroundClip: 'text',
-            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
-          }}>
+          <div style={BigTextStyle}>
 
             1- Asia
             <br />
@@ -157,13 +206,11 @@ app.frame('/area', async (c) => {
   })
 })
 
-
-app.frame('/avatar-gender', (c) => {
+app.frame('/sex', (c) => {
   const { inputText, deriveState } = c;
   const state = deriveState(previousState => {
     const country = Country.fromId<Country>(parseInt(inputText!));
-    if (country.isUnknown()) { throw new Error("invalid country") }
-    previousState.country = country.toJson();
+    previousState.country = country.isUnknown() ? Country.internet().toJson() : country.toJson();
   })
 
   return c.res({
@@ -171,11 +218,16 @@ app.frame('/avatar-gender', (c) => {
     image: (
       <div style={NftImageBG}>
         <div style={{
+          display: "flex",
+          flexDirection: 'column',
+          justifyContent: 'center',
           backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
           backgroundClip: 'text',
           color: 'transparent',
           fontSize: 60
         }}>
+          Area -- {state.country?.label}
+          <br />
           Choose gender for ur avatar
         </div>
       </div>
@@ -231,20 +283,26 @@ app.frame('/attributes', (c) => {
   return c.res({
     image: (
       <div style={NftImageBG}>
-
-        Your attributes were randomly generated
-        {
-          randomAttributes.map((attr, index) => (
-            <div key={index}>
-              {attr.name.label + " : " + attr.value}
-            </div>
-          ))
-        }
-
-        {state.spins ?
-          `spins remaining : ${state.spins}`
-          : 'No spins remaining'
-        }
+        <div style={{
+          fontSize: 40,
+          alignContent: 'center',
+          ...BigTextStyle
+        }}>
+          Your attributes (random)
+          {
+            randomAttributes.map((attr, index) => (
+              <div key={index}>
+                {attr.name.label + " : " + attr.value}
+              </div>
+            ))
+          }
+        </div>
+        <div style={{ fontSize: 40 }}>
+          {state.spins ?
+            `spins remaining : ${state.spins}`
+            : 'No spins remaining'
+          }
+        </div>
       </div>
     ),
     intents: [
@@ -314,14 +372,9 @@ app.frame('/nft', async (c) => {
             }}
           />
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center', alignItems: 'center', textAlign: 'center',
             fontSize: 40,
             marginTop: 20,
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-            backgroundClip: 'text',
-            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
+            ...BigTextStyle
           }}>
             {c.previousState.user?.forcaster.username}
             <br />
@@ -341,16 +394,7 @@ app.frame('/nft', async (c) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-            fontSize: 70,
-            marginTop: 20,
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-            backgroundClip: 'text',
-            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-          }}>
+          <div style={{ fontSize: '70', ...BigTextStyle }}>
             {
               c.previousState.randomeAttributes.map((attr, index) => (
                 <div key={index}>
@@ -376,20 +420,53 @@ app.frame('/nft', async (c) => {
 
 app.frame('/dashboard', (c) => {
   return c.res({
-    // action: '/attributes',
     image: (
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
-        Dashboard
+      <div style={NftImageBG}>
+        <div style={BigTextStyle}>
+          Dashboard
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action='/leaderboard'>Leaderboard</Button>,
+      <Button action='/daily-quest'>Daily Quest</Button>,
+    ],
+  })
+})
+
+
+app.frame('/leaderboard', (c) => {
+  return c.res({
+    image: (
+      <div style={NftImageBG}>
+        <div style={BigTextStyle}>
+          Leaderboard
+        </div>
       </div>
     ),
     intents: [
       <Button value="1">1</Button>,
-      <Button value="2">2</Button>,
-
-
+      <Button action='/dashboard'>back</Button>,
     ],
   })
 })
+
+app.frame('/daily-quest', (c) => {
+  return c.res({
+    image: (
+      <div style={NftImageBG}>
+        <div style={BigTextStyle}>
+          Daily quest
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button value="1">1</Button>,
+      <Button action='/dashboard'>back</Button>,
+    ],
+  })
+})
+
 
 devtools(app, { serveStatic })
 
