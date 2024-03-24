@@ -67,16 +67,16 @@ app.frame('/', async (c) => {
 
 app.frame('/area', async (c) => {
   let state = c.previousState;
-  const { buttonValue, inputText, status, frameData, deriveState } = c;
+  const { buttonValue, status, frameData, deriveState } = c;
 
   if (status === 'response' && buttonValue === 'ok') {
-    const userReposiotry = new UserRepository();
-    const user = await userReposiotry.findByFid(frameData?.fid!);
-    if (user) {
-      state = deriveState(previousState => {
-        previousState.user = user;
-      })
-    }
+    // const userReposiotry = new UserRepository();
+    // const user = await userReposiotry.findByFid(frameData?.fid!);
+    // if (user) {
+    //   state = deriveState(previousState => {
+    //     previousState.user = user;
+    //   })
+    // }
 
     // const forcaster: ForcasterType = {
     //   fid: frameData?.fid!,
@@ -120,7 +120,7 @@ app.frame('/area', async (c) => {
           backgroundColor: 'white',
           width: '50%',
           height: '70%',
-          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          // backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
@@ -132,6 +132,7 @@ app.frame('/area', async (c) => {
             backgroundClip: 'text',
             color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
           }}>
+            {frameData?.fid!}
 
             1- Asia
             <br />
