@@ -59,7 +59,7 @@ export default class NFT {
                 isRole: false,
                 isGender: true,
                 isCountry: false,
-                value: attribute.value
+                value: attribute.value,
             }
         }else if(!role.isUnknown()){
             obj[attribute.name] = {
@@ -67,7 +67,7 @@ export default class NFT {
                 isRole: true,
                 isGender: false,
                 isCountry: false,
-                value: attribute.value
+                value: attribute.value,
             }
         }else if(!randomAttributes.isUnknown()){
             obj[attribute.name] = {
@@ -75,7 +75,7 @@ export default class NFT {
                 isRole: false,
                 isGender: false,
                 isCountry: false,
-                value: attribute.value
+                value: attribute.value,
             }
         }else if(!country.isUnknown()){
             obj[attribute.name] = {
@@ -83,7 +83,7 @@ export default class NFT {
                 isRole: false,
                 isGender: false,
                 isCountry: true,
-                value: attribute.value
+                value: attribute.value,
             }
         }
         
