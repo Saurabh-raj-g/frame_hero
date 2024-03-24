@@ -292,32 +292,33 @@ app.frame('/building-image', async (c) => {
   const { previousState } = c;
 
   try {
-    const svg = GenerateImageData(c.previousState)
-    const arrayBuffer = await svg.arrayBuffer();
-    const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
-    );
+    // const svg = GenerateImageData(c.previousState)
+    // const arrayBuffer = await svg.arrayBuffer();
+    // const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
+    // );
 
-    const data = new FormData();
-    data.append("file", blob);
+    // const data = new FormData();
+    // data.append("file", blob);
 
-    const pinataMetadata = JSON.stringify({
-      name: `nft_${c.previousState.user?.forcaster.fid}`,
-    });
-    data.append("pinataMetadata", pinataMetadata);
-    const upload = await fetch(
-      "https://api.pinata.cloud/pinning/pinFileToIPFS",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.PINATA_API_JWT}`,
-        },
-        body: data,
-      }
-    );
-    const uploadRes = await upload.json();
-    console.log(uploadRes);
+    // const pinataMetadata = JSON.stringify({
+    //   name: `nft_${c.previousState.user?.forcaster.fid}`,
+    // });
+    // data.append("pinataMetadata", pinataMetadata);
+    // const upload = await fetch(
+    //   "https://api.pinata.cloud/pinning/pinFileToIPFS",
+    //   {
+    //     method: "POST",
+    //     headers: {
+    //       Authorization: `Bearer ${process.env.PINATA_API_JWT}`,
+    //     },
+    //     body: data,
+    //   }
+    // );
+    // const uploadRes = await upload.json();
+    // console.log(uploadRes);
 
-    const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
+    // const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
+    const imageurl = 'https://harlequin-electoral-lemur-550.mypinata.cloud/ipfs/QmfW2dYhGA68nFJ1kCuxAiPFGuk17ssR5ZtmCmmuQdZGNe'
     console.log(imageurl)
     previousState.imageurl = imageurl;
 

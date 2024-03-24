@@ -8,11 +8,13 @@ export default class ThirdWebService {
     private thirdWeb : ThirdwebSDK;
     constructor(chain :Chain){
         if (chain.isBaseSepolia()) {
+            console.log(process.env.WALLET_PRIVATE_KEY);
+            
             this.thirdWeb = ThirdwebSDK.fromPrivateKey(
                 process.env.WALLET_PRIVATE_KEY!, // Your wallet's private key (only required for write operations)
-                "",
+                process.env.BASE_RPC_URL!,
                 {
-                    secretKey: process.env.TW_SECRET_KEY,
+                    secretKey: process.env.THIRDWEB_SECRET_KEY,
                 }
             );
         }
