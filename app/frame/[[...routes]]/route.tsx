@@ -36,6 +36,7 @@ const app = new Frog<{ State: State }>({
     role: null,
     randomeAttributes: [],
     isUserTempLoaded: false,
+    imageurl: null
   },
   verify: 'silent',
   // hub: {
@@ -71,20 +72,20 @@ app.frame('/area', async (c) => {
   if (status === 'response' && buttonValue === 'ok') {
     const userReposiotry = new UserRepository();
     const user = await userReposiotry.findByFid(frameData?.fid!);
-    if(user){
+    if (user) {
       state = deriveState(previousState => {
         previousState.user = user;
       })
     }
-    
-      // const forcaster: ForcasterType = {
-      //   fid: frameData?.fid!,
-      //   name: forCasterData?.profileName!,
-      //   username: forCasterData?.profileName!,
-      //   walletAddress: forCasterData?.userAssociatedAddresses![0]!,
-      //   pfpUrl: forCasterData?.profileImage?.medium!,
-      // }
-     
+
+    // const forcaster: ForcasterType = {
+    //   fid: frameData?.fid!,
+    //   name: forCasterData?.profileName!,
+    //   username: forCasterData?.profileName!,
+    //   walletAddress: forCasterData?.userAssociatedAddresses![0]!,
+    //   pfpUrl: forCasterData?.profileImage?.medium!,
+    // }
+
   }
 
   // get user data
@@ -157,13 +158,13 @@ app.frame('/area', async (c) => {
 })
 
 
-app.frame('/avatar-gender', async(c) => {
+app.frame('/avatar-gender', async (c) => {
   let state = c.previousState;
-  const { inputText, deriveState, previousState,frameData } = c;
+  const { inputText, deriveState, previousState, frameData } = c;
   if (!previousState.user) {
     // create user
     const forCasterData = await PinataService.userByFid(frameData?.fid!);
-    
+
     const forcaster: ForcasterType = {
       fid: forCasterData.data.fid,
       name: forCasterData.data.display_name,
@@ -206,13 +207,13 @@ app.frame('/avatar-gender', async(c) => {
   })
 })
 
-app.frame('/attributes', async(c) => {
+app.frame('/attributes', async (c) => {
   let state = c.previousState;
   const { buttonValue, deriveState, previousState } = c
 
   let randomAttributes: { name: ValueObjectType; value: number }[] = [];
   const userReposiotry = new UserRepository();
-  if(previousState.isUserTempLoaded){
+  if (previousState.isUserTempLoaded) {
     const saved = await userReposiotry.create(previousState.user!);
     if (!saved) { throw new Error('user not saved') };
     state = deriveState(previousState => {
@@ -281,15 +282,16 @@ app.frame('/attributes', async(c) => {
       </div>
     ),
     intents: [
-      <Button value="nft" action='/nft'>Preview NFT</Button>,
-      <Button value="respin" action={state.spins ? '/attributes' : '/nft'}>{state.spins ? 'Retry' : 'No more changes!!'}</Button>
+      <Button value="nft" action='/building-image'>Preview NFT</Button>,
+      <Button value="respin" action={state.spins ? '/attributes' : '/building-image'}>{state.spins ? 'Retry' : 'No more changes!!'}</Button>
     ],
   })
 })
 
-app.frame('/nft', async (c) => {
+app.frame('/building-image', async (c) => {
+  const { previousState } = c;
+
   try {
-    const {previousState} = c;
     const svg = GenerateImageData(c.previousState)
     const arrayBuffer = await svg.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: 'image/jpeg' }
@@ -317,23 +319,46 @@ app.frame('/nft', async (c) => {
 
     const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
     console.log(imageurl)
-    let attributes: {name:string; value:number}[] = [];
+    previousState.imageurl = imageurl;
+
+  } catch (error) {
+    console.log(error);
+  }
+
+  return c.res({
+    // image: (
+    //     svg.
+    // ),
+    image: ((
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        Building NFT
+      </div>
+    )),
+    intents: [
+      <Button action="/nft">SHOW</Button>,
+    ],
+  })
+})
+
+app.frame('/nft', async (c) => {
+  const { previousState } = c;
+  try {
+    let attributes: { name: string; value: number }[] = [];
     c.previousState.randomeAttributes.forEach((attr) => {
-      attributes.push({name:attr.name.name,value:attr.value})
+      attributes.push({ name: attr.name.name, value: attr.value })
     })
-    attributes.push({name: c.previousState.country?.name!, value: 0});
-    attributes.push({name: c.previousState.gender?.name!, value: 0});
-    
-    const newNFT =  new NFT(0, "Frame Hero", imageurl, "This is a cool NFT",attributes).getNFT();
+    attributes.push({ name: c.previousState.country?.name!, value: 0 });
+    attributes.push({ name: c.previousState.gender?.name!, value: 0 });
+    const newNFT = new NFT(0, "Frame Hero", previousState.imageurl!, "This is a cool NFT", attributes).getNFT();
     console.log("signedPayloadsvsv");
     const thirdweb = new ThirdWebService(Chain.baseSepolia());
     console.log("signedPayloadsvchhjasv");
     const signedPayload = await thirdweb.getSignatureForMinting(newNFT, c.previousState.user?.forcaster.walletAddress!);
     console.log("signedPayload", signedPayload);
-    const sdk =  new ThirdwebSDK("base-sepolia-testnet", {
+    const sdk = new ThirdwebSDK("base-sepolia-testnet", {
       clientId: process.env.THIRDWEB_CLIENT_KEY!,
     });
-    const contract = await sdk.getContract(process.env.NFT_COLLECTION_ADDRESS!,"nft-collection");
+    const contract = await sdk.getContract(process.env.NFT_COLLECTION_ADDRESS!, "nft-collection");
     const minted = await contract.signature.mint(signedPayload)
     console.log(minted.id._hex);
   } catch (error) {
@@ -345,81 +370,7 @@ app.frame('/nft', async (c) => {
     // image: (
     //     svg.
     // ),
-    image: (
-      <div style={NftImageBG}>
-        {/* farcaster pfp */}
-        <div style={{
-          position: 'absolute', top: 0, left: 0,
-          display: 'flex',
-          width: '30%',
-          height: '100%',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-          <img
-            width="256"
-            height="256"
-            src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
-            style={{
-              borderRadius: 128,
-            }}
-          />
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-            fontSize: 40,
-            marginTop: 20,
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-            backgroundClip: 'text',
-            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
-          }}>
-            {c.previousState.user?.forcaster.username}
-            <br />
-            {c.previousState.gender?.label}
-            <br />
-            {c.previousState.country?.label}
-
-          </div>
-
-        </div>
-
-        <div style={{
-          display: 'flex',
-          width: '30%',
-          height: '100%',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-            fontSize: 70,
-            marginTop: 20,
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
-            backgroundClip: 'text',
-            color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-          }}>
-            {
-              c.previousState.randomeAttributes.map((attr, index) => (
-                <div key={index}>
-                  {attr.name.label + " : " + attr.value}
-                </div>
-              ))
-            }
-
-            <br />
-            @roles -
-          </div>
-
-        </div>
-
-
-      </div>
-    ),
+    image: previousState.imageurl!,
     intents: [
       <Button.Mint target="...">Mint</Button.Mint>,
     ],
