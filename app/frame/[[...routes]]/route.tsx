@@ -1,6 +1,6 @@
 /** @jsxImportSource frog/jsx */
 
-import { abi, contractAbi, mintABI } from '@/src/abi/ERC721abi'
+import { abi } from '@/src/abi/ERC721abi'
 import NFT from '@/src/models/nft'
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
@@ -379,15 +379,17 @@ app.frame('/nft', async (c) => {
 })
 
 app.transaction('/mint', (c) => {
+  console.log(process.env.NFT_COLLECTION_ADDRESS as '0x');
+  const { previousState } = c
+
   const { inputText } = c
   // Contract transaction response.
   return c.contract({
     abi,
     chainId: 'eip155:84532',
-    functionName: 'mint',
-    args: [BigInt("1")],
+    functionName: 'mintTo',
+    args: [previousState.user?.forcaster.walletAddress! as '0x', ""],
     to: process.env.NFT_COLLECTION_ADDRESS as '0x',
-    value: parseEther("0x")
   })
 })
 
