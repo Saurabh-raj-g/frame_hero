@@ -133,7 +133,7 @@ app.frame('/area', async (c) => {
             color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
           }}>
             {frameData?.fid!}
-
+            <br />
             1- Asia
             <br />
             2- Africa
@@ -213,12 +213,12 @@ app.frame('/attributes', async (c) => {
   const { buttonValue, deriveState, previousState } = c
 
   let randomAttributes: { name: ValueObjectType; value: number }[] = [];
-  const userReposiotry = new UserRepository();
+  // const userReposiotry = new UserRepository();
   if (previousState.isUserTempLoaded) {
-    const saved = await userReposiotry.create(previousState.user!);
-    if (!saved) { throw new Error('user not saved') };
+    // const saved = await userReposiotry.create(previousState.user!);
+    // if (!saved) { throw new Error('user not saved') };
     state = deriveState(previousState => {
-      previousState.user = saved;
+      // previousState.user = saved;
       previousState.isUserTempLoaded = false;
     });
   }
