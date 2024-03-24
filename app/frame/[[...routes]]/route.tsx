@@ -69,7 +69,7 @@ app.frame('/', async (c) => {
 
 app.frame('/area', async (c) => {
   let state = c.previousState;
-  const { buttonValue, status, frameData, deriveState } = c;
+  const { buttonValue, status, frameData } = c;
 
   if (status === 'response' && buttonValue === 'ok') {
     // const userReposiotry = new UserRepository();
@@ -97,39 +97,26 @@ app.frame('/area', async (c) => {
     action: '/avatar-gender',
     image: (
       <div
-        style={{
-          display: 'flex',
-          fontSize: 60,
-          color: 'black',
-          background: '#f6f6f6',
-          width: '100%',
-          height: '100%',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          position: 'relative',
-        }}
+        style={NftImageBG}
       >
-        {/* <img
+        <img
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-          src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmTohucBEeSic2oQUFMfpx8BnADcud6iRMEric4Jzfjq2F`}
+          src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmYECGo4UcG9aWK1t6Eo38f8wokhFvk6mYWTGiV1ANeznM`}
           alt="Background Image"
-        /> */}
+        />
         <div style={{
-          position: 'absolute', top: 10,
+          position: 'absolute', top: 20,
           display: 'flex',
           fontSize: 50,
-          backgroundColor: 'white',
+          // backgroundColor: 'white',
           width: '50%',
-          height: '70%',
+          height: '80%',
           // backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <div style={BigTextStyle}>
-            fid - {frameData?.fid!}
-            <br />
+          <div style={{ fontSize: 30, ...BigTextStyle }}>
             1- Asia
             <br />
             2- Africa
@@ -183,19 +170,7 @@ app.frame('/avatar-gender', async (c) => {
 
   return c.res({
     action: '/attributes',
-    image: (
-      <div style={NftImageBG}>
-        <div style={{
-          fontSize: 40,
-          alignContent: 'center',
-          ...BigTextStyle
-        }}>
-          Area -- {state.country?.label}
-          <br />
-          Choose gender for ur avatar
-        </div>
-      </div>
-    ),
+    image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmVyHHPZWeWuYrDw49hMT7EhrJ1MPZuTW5uL5J32NtwuUe`,
     intents: [
       <Button value="male">Male</Button>,
       <Button value="female">Female</Button>,
@@ -262,25 +237,47 @@ app.frame('/attributes', async (c) => {
   return c.res({
     image: (
       <div style={NftImageBG}>
+        <img
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmUWfNA76aWk9Ppsx8tVVWrKzi7CNQoczUg9JUaMpqkocx`}
+          alt="Background Image"
+        />
         <div style={{
-          fontSize: 40,
-          alignContent: 'center',
-          ...BigTextStyle
+          position: 'absolute', top: 20,
+          display: 'flex',
+          fontSize: 50,
+          // backgroundColor: 'white',
+          width: '50%',
+          height: '80%',
+          // backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}>
-          Your attributes (random)
-          {
-            randomAttributes.map((attr, index) => (
-              <div key={index}>
-                {attr.name.label + " : " + attr.value}
-              </div>
-            ))
-          }
-        </div>
-        <div style={{ fontSize: 40 }}>
-          {state.spins ?
-            `spins remaining : ${state.spins}`
-            : 'No spins remaining'
-          }
+          {/* <div style={{ fontSize: 40 }}>
+            {state.country?.label!}
+          </div>
+          <div style={{ fontSize: 40 }}> {state.gender?.label!}</div> */}
+          <div style={{
+            fontSize: 40,
+            alignContent: 'center',
+            ...BigTextStyle
+          }}>
+
+            {
+              randomAttributes.map((attr, index) => (
+                <div key={index}>
+                  {attr.name.label + " : " + attr.value}
+                </div>
+              ))
+            }
+          </div>
+          <div style={{ fontSize: 40 }}>
+            {state.spins ?
+              `spins remaining : ${state.spins}`
+              : 'No spins remaining'
+            }
+          </div>
         </div>
       </div>
     ),
@@ -321,7 +318,6 @@ app.frame('/building-image', async (c) => {
     console.log(uploadRes);
 
     const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
-    // const imageurl = 'https://harlequin-electoral-lemur-550.mypinata.cloud/ipfs/QmfW2dYhGA68nFJ1kCuxAiPFGuk17ssR5ZtmCmmuQdZGNe'
     console.log(imageurl)
     previousState.imageurl = imageurl;
 
@@ -330,14 +326,7 @@ app.frame('/building-image', async (c) => {
   }
 
   return c.res({
-    // image: (
-    //     svg.
-    // ),
-    image: ((
-      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
-        Building NFT
-      </div>
-    )),
+    image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmRf4aKknnwE216jyRDS8NwxdbsyJYDm18p3xubLubJzoA`,
     intents: [
       <Button action="/nft">SHOW</Button>,
     ],
@@ -379,10 +368,8 @@ app.frame('/nft', async (c) => {
 })
 
 app.transaction('/mint', (c) => {
-  console.log(process.env.NFT_COLLECTION_ADDRESS as '0x');
   const { previousState } = c
-
-  const { inputText } = c
+  console.log(previousState.user?.forcaster.walletAddress!)
   // Contract transaction response.
   return c.contract({
     abi,
@@ -401,7 +388,8 @@ app.frame('/dashboard', (c) => {
       <div style={NftImageBG}>
         <div style={BigTextStyle}>
           Dashboard
-          Transaction ID: {transactionId}
+          <br />
+          {transactionId && `Transaction ID: ${transactionId}`}
 
         </div>
       </div>
