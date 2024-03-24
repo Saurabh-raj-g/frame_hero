@@ -4,7 +4,13 @@ export type NFTType = {
     image: string;
     description: string | null;
     attributes: {
-        [key:string]: number;
+        [key:string]: {
+            isRandomAttribute: boolean;
+            isRole: boolean;
+            isGender: boolean;
+            isCountry: boolean;
+            value: number;
+        };
     }
     createdAt: string;
     updatedAt: string;

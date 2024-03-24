@@ -1,6 +1,7 @@
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { NFT, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import Chain from "../valueObject/Chain";
 import dotenv from "dotenv";
+import { NFTType } from "../types/NFTType";
 dotenv.config();
 
 export default class ThirdWebService {
@@ -155,11 +156,28 @@ export default class ThirdWebService {
        };
      * @returns 
      */
-    public async getSignatureForMinting(metadata:any) {
+    public async getSignatureForMinting(metadata:NFTType, address:string) {
         const contract =  await this.getContract();
-        const signedPayload = await contract.erc721.signature.generate(metadata);
+        const { attributes } = metadata;
+        const attributesKeys = Object.keys(attributes);
+        const payload = {
+            metadata: {
+              name: "Frame Hero",
+              description: metadata.description,
+              image: metadata.image, // This can be an image url or file
+              attributes: attributesKeys.map((key) => {
+                return {
+                    key: {...metadata.attributes[key]}
+                };
+              }),
+            },
+            price: 0,
+            to: address,
+        }
+      
+        const signedPayload = await contract.erc721.signature.generate(payload);
 
-        return signedPayload;
+        return signedPayload.payload;
     }
 
     public async burnNFT(tokenId:any) {
