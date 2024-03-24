@@ -18,7 +18,7 @@ export default class Library {
 
   public static async mysteryBoxOpen(nft: NFTType, user:WithId<UserInterface>): Promise<number> {
     const attributes = Object.keys(nft.attributes);
-    const prize = 0;
+    let prize = 0;
     const LUCK_PROBABILITY = [0,30,50,80,100];
     const randomAttributeVaules = [0,0,0,]; // luck, intelligence, power
     
@@ -61,22 +61,18 @@ export default class Library {
     nftRoles.forEach((value, key) => {
       const role = Role.fromName<Role>(key);
       if(role.isBeginner() && userCreatedAt.diff(now, 'day') > 7){
-        nftRoles.set(Role.booster().getName(), value + this.randomNumberBetween(1, 10)*value*0.01);
+        newNftRoles.set(Role.booster().getName(), value + this.randomNumberBetween(1, 10)*value*0.01);
       }
-      //if(role.isBooster() && now.diff(nft.attributes[name]., 'day') > 10){
-     
+      if(role.isBooster() && now.diff(userCreatedAt, 'day') > 10){
+        newNftRoles.set(Role.booster().getName(), value + this.randomNumberBetween(10, 20)*value*0.02);
+      }
     });
 
+    prize += randomAttributeVaules[0] + randomAttributeVaules[1] + randomAttributeVaules[2];
 
-
-
-      
-
-    
-    // const role = Role.fromName<Role>(attribute.name);
-    // const randomAttributes = RandomAttributes.fromName<RandomAttributes>(attribute.name);
-        
-    
+    newNftRoles.forEach((value, key) => {
+      prize += value;
+    });
 
     return prize;
   }
