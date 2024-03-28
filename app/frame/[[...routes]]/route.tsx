@@ -398,7 +398,7 @@ app.frame('/nft', async (c) => {
 })
 
 app.transaction('/mint', (c) => {
-  const { previousState } = c
+  const { previousState, address } = c
   console.log(previousState.user?.forcaster.walletAddress!)
   // Contract transaction response.
   return c.contract({
@@ -406,7 +406,8 @@ app.transaction('/mint', (c) => {
     chainId: 'eip155:84532',
     functionName: 'safeMint',
     args: [
-      previousState.user?.forcaster.walletAddress! as '0x',
+      // previousState.user?.forcaster.walletAddress! as '0x', // custody address farcaster
+      address as '0x',
       `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${previousState.metadataCID}`
     ],
     to: process.env.NFT_COLLECTION_ADDRESS as '0x',
