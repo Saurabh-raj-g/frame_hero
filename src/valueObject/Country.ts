@@ -25,7 +25,7 @@ export default class Country extends Base {
             },
             {
                 id: 5,
-                name: "aferica",
+                name: "africa",
                 label: "Africa",    
             },
             {

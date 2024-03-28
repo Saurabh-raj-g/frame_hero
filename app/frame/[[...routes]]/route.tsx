@@ -5,7 +5,7 @@ import NFT from '@/src/models/nft'
 import User from '@/src/models/user'
 import UserRepository from '@/src/repositories/userRepository'
 import AirStackService from '@/src/service/AirStackService'
-import GenerateImageData, { BigTextStyle, NftImageBG } from '@/src/service/ImageService'
+import GenerateImageData, { BigTextStyle, NftImageBG, SmallTextStyle } from '@/src/service/ImageService'
 import PinataService from '@/src/service/PinataService'
 import RandomAttributesValueService from '@/src/service/RandomAttributesValueService'
 import ThirdWebService from '@/src/service/ThirdWebService'
@@ -118,18 +118,14 @@ app.frame('/area', async (c) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <div style={{ fontSize: 30, ...BigTextStyle }}>
-            1- Asia
-            <br />
-            2- Africa
-            <br />
-            3- Europe
-            <br />
-            4- NA
-            <br />
-            5- SA
-            <br />
-            6- Internet
+          <div style={SmallTextStyle}>
+            {
+              Country.getResourceArray().map((attr, index) => (
+                <div key={index}>
+                  {attr.id + " : " + attr.label}
+                </div>
+              ))
+            }
           </div>
         </div>
 
@@ -256,7 +252,7 @@ app.frame('/attributes', async (c) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <div style={{ display: 'flex', fontSize: 30 }}>
+          <div style={SmallTextStyle}>
             choices :
             {state.country?.label!}
             ,
@@ -267,7 +263,6 @@ app.frame('/attributes', async (c) => {
             alignContent: 'center',
             ...BigTextStyle
           }}>
-
             {
               randomAttributes.map((attr, index) => (
                 <div key={index}>
@@ -276,7 +271,7 @@ app.frame('/attributes', async (c) => {
               ))
             }
           </div>
-          <div style={{ fontSize: 30 }}>
+          <div style={SmallTextStyle}>
             {state.spins ?
               `spins remaining : ${state.spins}`
               : 'No spins remaining'
