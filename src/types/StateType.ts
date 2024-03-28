@@ -10,4 +10,6 @@ export type State = {
   gender: ValueObjectType | null;
   role: ValueObjectType | null;
   randomeAttributes: { name: ValueObjectType, value: number }[];
+  imageCID: string | null,
+  metadataCID: string | null
 }

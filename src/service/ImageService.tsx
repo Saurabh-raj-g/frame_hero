@@ -24,7 +24,7 @@ export const BigTextStyle = {
   display: "flex",
   flexDirection: 'column',
   justifyContent: 'center',
-  backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+  backgroundImage: 'linear-gradient(90deg, rgb(121, 40, 202), rgb(255, 0, 128))',
   backgroundClip: 'text',
   color: 'transparent',
   fontSize: 60
@@ -59,7 +59,7 @@ function GenerateImageData(state: State) {
             justifyContent: 'center', alignItems: 'center', textAlign: 'center',
             fontSize: 40,
             marginTop: 20,
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+            backgroundImage: 'linear-gradient(90deg, rgb(121, 40, 202), rgb(255, 0, 128))',
             backgroundClip: 'text',
             color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
           }}>
@@ -86,7 +86,7 @@ function GenerateImageData(state: State) {
             justifyContent: 'center', alignItems: 'center', textAlign: 'center',
             fontSize: 70,
             marginTop: 20,
-            backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+            backgroundImage: 'linear-gradient(90deg, rgb(121, 40, 202), rgb(255, 0, 128))',
             backgroundClip: 'text',
             color: 'transparent', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
           }}>

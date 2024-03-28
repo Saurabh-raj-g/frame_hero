@@ -37,7 +37,9 @@ const app = new Frog<{ State: State }>({
     role: null,
     randomeAttributes: [],
     isUserTempLoaded: false,
-    imageurl: null
+    imageurl: null,
+    imageCID: null,
+    metadataCID: null
   },
   verify: 'silent',
   // hub: {
@@ -254,10 +256,12 @@ app.frame('/attributes', async (c) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-          {/* <div style={{ fontSize: 40 }}>
+          <div style={{ display: 'flex', fontSize: 30 }}>
+            choices :
             {state.country?.label!}
+            ,
+            {state.gender?.label!}
           </div>
-          <div style={{ fontSize: 40 }}> {state.gender?.label!}</div> */}
           <div style={{
             fontSize: 40,
             alignContent: 'center',
@@ -272,7 +276,7 @@ app.frame('/attributes', async (c) => {
               ))
             }
           </div>
-          <div style={{ fontSize: 40 }}>
+          <div style={{ fontSize: 30 }}>
             {state.spins ?
               `spins remaining : ${state.spins}`
               : 'No spins remaining'
@@ -301,7 +305,7 @@ app.frame('/building-image', async (c) => {
     data.append("file", blob);
 
     const pinataMetadata = JSON.stringify({
-      name: `nft_${c.previousState.user?.forcaster.fid}`,
+      name: `nft_${c.previousState.user?.forcaster.fid}.jpg`,
     });
     data.append("pinataMetadata", pinataMetadata);
     const upload = await fetch(
@@ -316,6 +320,7 @@ app.frame('/building-image', async (c) => {
     );
     const uploadRes = await upload.json();
     console.log(uploadRes);
+    previousState.imageCID = uploadRes.IpfsHash
 
     const imageurl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${uploadRes.IpfsHash}`
     console.log(imageurl)
@@ -340,8 +345,38 @@ app.frame('/nft', async (c) => {
     c.previousState.randomeAttributes.forEach((attr) => {
       attributes.push({ name: attr.name.name, value: attr.value })
     })
-    attributes.push({ name: c.previousState.country?.name!, value: 0 });
-    attributes.push({ name: c.previousState.gender?.name!, value: 0 });
+    attributes.push({ name: previousState.country?.name!, value: 0 });
+    attributes.push({ name: previousState.gender?.name!, value: 0 });
+
+    const data = JSON.stringify({
+      pinataContent: {
+        name: `frame-hero--${previousState.user?.forcaster.username!}`,
+        description: "Your NFT for playing our game - Frame Hero ",
+        external_url: "https://pinata.cloud",
+        image: `ipfs://${previousState.imageCID}`,
+        // attributes        
+      },
+      pinataMetadata: {
+        name: `nft_${c.previousState.user?.forcaster.fid}_metadata.json`
+      }
+    })
+
+    try {
+      const res = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.PINATA_API_JWT}`,
+        },
+        body: data
+      });
+      const metadataRes = await res.json();
+      console.log(metadataRes);
+      previousState.metadataCID = metadataRes.IpfsHash
+    } catch (error) {
+      console.log(error);
+    }
+
     // const newNFT = new NFT(0, "Frame Hero", previousState.imageurl!, "This is a cool NFT", attributes).getNFT();
     // console.log("signedPayloadsvsv");
     // const thirdweb = new ThirdWebService(Chain.baseSepolia());
@@ -374,8 +409,11 @@ app.transaction('/mint', (c) => {
   return c.contract({
     abi,
     chainId: 'eip155:84532',
-    functionName: 'mintTo',
-    args: [previousState.user?.forcaster.walletAddress! as '0x', ""],
+    functionName: 'safeMint',
+    args: [
+      previousState.user?.forcaster.walletAddress! as '0x',
+      `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${previousState.metadataCID}`
+    ],
     to: process.env.NFT_COLLECTION_ADDRESS as '0x',
   })
 })
@@ -386,6 +424,11 @@ app.frame('/dashboard', (c) => {
   return c.res({
     image: (
       <div style={NftImageBG}>
+        <img
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmZ3LfCrpsPdg7h3kohnE1LfnVVCsE58VDKoSZYKKpMC26`}
+          alt="Background Image"
+        />
         <div style={BigTextStyle}>
           Dashboard
           <br />
@@ -396,6 +439,7 @@ app.frame('/dashboard', (c) => {
     ),
     intents: [
       <Button action='/leaderboard'>Leaderboard</Button>,
+      <Button action='/my-nft'>View NFT</Button>,
       <Button action='/daily-quest'>Daily Quest</Button>,
     ],
   })
@@ -413,6 +457,18 @@ app.frame('/leaderboard', (c) => {
     ),
     intents: [
       <Button value="1">1</Button>,
+      <Button action='/dashboard'>back</Button>,
+    ],
+  })
+})
+
+app.frame('/my-nft', (c) => {
+  return c.res({
+    image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${c.previousState.imageCID!}`,
+    intents: [
+      <Button.Redirect location='#'>
+        View on zora ..
+      </Button.Redirect>,
       <Button action='/dashboard'>back</Button>,
     ],
   })
