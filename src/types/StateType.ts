@@ -12,5 +12,6 @@ export type State = {
   randomeAttributes: { name: ValueObjectType, value: number }[];
   imageCID: string | null,
   metadataCID: string | null,
-  tokenID: number | null
+  tokenID: number | null, 
+  txnID: string | null
 }

@@ -420,11 +420,9 @@ app.transaction('/mint', (c) => {
   })
 })
 
-app.frame('/dashboard', async (c) => {
+app.frame('/dashboard', (c) => {
   const { transactionId, previousState } = c
-  const receipt = await web3.eth.getTransactionReceipt(transactionId as '0x')
-  const tokenId = Web3.utils.hexToNumber(receipt.logs[0].topics ? receipt.logs[0].topics[3] as '0x' : '0x')
-  previousState.tokenID = tokenId as number
+  previousState.txnID = transactionId!
 
   return c.res({
     image: (
@@ -464,8 +462,15 @@ app.frame('/leaderboard', (c) => {
   })
 })
 
-app.frame('/my-nft', (c) => {
+app.frame('/my-nft', async (c) => {
   const { previousState } = c
+
+  if (previousState.txnID) {
+    const receipt = await web3.eth.getTransactionReceipt(previousState.txnID as '0x')
+    const tokenId = Web3.utils.hexToNumber(receipt.logs[0].topics ? receipt.logs[0].topics[3] as '0x' : '0x')
+    previousState.tokenID = tokenId as number
+  }
+
   const url = `https://testnets.opensea.io/assets/base-sepolia/${process.env.NFT_COLLECTION_ADDRESS}/${previousState.tokenID}`
   return c.res({
     image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${c.previousState.imageCID!}`,
