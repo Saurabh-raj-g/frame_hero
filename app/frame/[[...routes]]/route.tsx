@@ -22,11 +22,10 @@ import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { Preahvihear } from 'next/font/google'
 
 import { Web3 } from 'web3';
 
-const provider = new Web3.providers.WebsocketProvider(process.env.ALCHEMY_BASE_RPC!);
+const provider = new Web3(process.env.ALCHEMY_BASE_RPC!);
 const web3 = new Web3(provider);
 
 const MAX_SPINS = 3;
