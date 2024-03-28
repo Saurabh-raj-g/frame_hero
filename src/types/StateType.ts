@@ -11,5 +11,6 @@ export type State = {
   role: ValueObjectType | null;
   randomeAttributes: { name: ValueObjectType, value: number }[];
   imageCID: string | null,
-  metadataCID: string | null
+  metadataCID: string | null,
+  tokenID: number | null
 }

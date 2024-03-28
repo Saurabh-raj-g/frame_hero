@@ -11,17 +11,18 @@
   },
   "dependencies": {
     "@thirdweb-dev/sdk": "^3.10.7",
+    "axios": "^1.6.8",
     "dayjs": "^1.11.7",
     "dotenv": "^16.4.5",
     "ethers": "^5.7.2",
     "frog": "latest",
     "hono": "^4",
-    "axios": "^1.6.8",
     "mongodb": "^6.5.0",
     "next": "14.1.0",
     "pinata-fdk": "^3.6.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "web3": "^4.7.0"
   },
   "devDependencies": {
     "@types/node": "^20",

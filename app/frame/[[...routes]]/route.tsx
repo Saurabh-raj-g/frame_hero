@@ -22,6 +22,12 @@ import { devtools } from 'frog/dev'
 import { pinata } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
+import { Preahvihear } from 'next/font/google'
+
+import { Web3 } from 'web3';
+
+const provider = new Web3.providers.WebsocketProvider(process.env.ALCHEMY_BASE_RPC!);
+const web3 = new Web3(provider);
 
 const MAX_SPINS = 3;
 
@@ -39,7 +45,8 @@ const app = new Frog<{ State: State }>({
     isUserTempLoaded: false,
     imageurl: null,
     imageCID: null,
-    metadataCID: null
+    metadataCID: null,
+    tokenID: null
   },
   verify: 'silent',
   // hub: {
@@ -414,8 +421,11 @@ app.transaction('/mint', (c) => {
   })
 })
 
-app.frame('/dashboard', (c) => {
-  const { transactionId } = c
+app.frame('/dashboard', async (c) => {
+  const { transactionId, previousState } = c
+  const receipt = await web3.eth.getTransactionReceipt(transactionId as '0x')
+  const tokenId = Web3.utils.hexToNumber(receipt.logs[0].topics ? receipt.logs[0].topics[3] as '0x' : '0x')
+  previousState.tokenID = tokenId as number
 
   return c.res({
     image: (
@@ -425,11 +435,8 @@ app.frame('/dashboard', (c) => {
           src={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/QmZ3LfCrpsPdg7h3kohnE1LfnVVCsE58VDKoSZYKKpMC26`}
           alt="Background Image"
         />
-        <div style={BigTextStyle}>
-          Dashboard
-          <br />
+        <div style={SmallTextStyle}>
           {transactionId && `Transaction ID: ${transactionId}`}
-
         </div>
       </div>
     ),
@@ -459,11 +466,13 @@ app.frame('/leaderboard', (c) => {
 })
 
 app.frame('/my-nft', (c) => {
+  const { previousState } = c
+  const url = `https://testnets.opensea.io/assets/base-sepolia/${process.env.NFT_COLLECTION_ADDRESS}/${previousState.tokenID}`
   return c.res({
     image: `${process.env.NEXT_PUBLIC_PINATA_GATEWAY_DOMAIN}/ipfs/${c.previousState.imageCID!}`,
     intents: [
-      <Button.Redirect location='#'>
-        View on zora ..
+      <Button.Redirect location={url}>
+        View on opensea
       </Button.Redirect>,
       <Button action='/dashboard'>back</Button>,
     ],
